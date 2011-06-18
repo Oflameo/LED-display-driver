@@ -3,5 +3,19 @@
 SEARCH='hackpgh OR hackpittsburgh OR "hack pittsburgh"'
 LED_SIGN=/dev/tts/1
 
+cd /jffs
+
+#wget -q -O - "http://search.twitter.com/search.json?show_user=true&rpp=1&q=$SEARCH" \
+#     |  sed -e 's/^.*"from_user":"\([^"]*\)".*"text":"\([^"]*\)".*/'`echo -e "\x1c"`'2\1: '`echo -e "\x1c"`'1\2\n/' > $LED_SIGN
+
 wget -q -O - "http://search.twitter.com/search.json?show_user=true&rpp=1&q=$SEARCH" \
-     |  sed -e 's/^.*"from_user":"\([^"]*\)".*"text":"\([^"]*\)".*/'`echo -e "\x1c"`'2\1: '`echo -e "\x1c"`'1\2\n/' > $LED_SIGN
+     |  sed -e 's/^.*"from_user":"\([^"]*\)".*"text":"\([^"]*\)".*/'`echo -e "\x1c"`'2\1: '`echo -e "\x1c"`'1\2\n/' > latest
+cmp -s latest last_written
+
+if [ $? -ne 0 ]; then
+  echo "new"
+  cp latest last_written
+  echo -e "\x1f" > $LED_SIGN
+  cat last_written > $LED_SIGN
+fi
+
