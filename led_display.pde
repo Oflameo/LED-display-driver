@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <avr/pgmspace.h>
 
 // Sketch to drive a hacked 80x7 2-color LED display
@@ -633,6 +634,8 @@ unsigned char userStringDisplayLen;
 // Current 
 unsigned char backColor;
 
+unsigned long last_drew_at=0;
+
 int scrollPosition;
 
 // Default message
@@ -680,8 +683,7 @@ void setup()
 void loop()
 {
   // Look for new serial input
-  if (Serial.available() > 0)
-  {
+  for(int to_read=Serial.available(); to_read > 0; to_read--) {
     unsigned char new_data = Serial.read();
 //    Serial.print(new_data);
 
@@ -723,17 +725,25 @@ void loop()
     }
   }
 
-  // Draw the next frame and wait a bit
-  clearVideoBuffer(backColor);
-  drawString(userString, userStringLen, scrollPosition);
-  flipVideoBuffer();
-  delay(40);
-
-  // Then update the scroll position
-  scrollPosition--;
-  if (scrollPosition < -userStringDisplayLen*6) {
-    scrollPosition = DISPLAY_COLS_B*8;
+  // consider refreshing the display, if it's been over
+  // 40ms since last time we did it.
+  unsigned long now = millis();
+  if((now - last_drew_at) > 40) {
+    // Draw the next frame
+    clearVideoBuffer(backColor);
+    drawString(userString, userStringLen, scrollPosition);
+    flipVideoBuffer();
+ 
+    // Then update the scroll position
+    scrollPosition--;
+    if (scrollPosition < -userStringDisplayLen*6) {
+      scrollPosition = DISPLAY_COLS_B*8;
+    }
+    
+    // remember that we drew now
+    last_drew_at = now;
   }
+
 }
 
 
