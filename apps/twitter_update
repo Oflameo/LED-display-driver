@@ -1,6 +1,6 @@
 #!/bin/ash
 
-SEARCH='hackpgh OR hackpittsburgh OR "hack pittsburgh"'
+SEARCH='hackpgh%20OR%20hackpittsburgh%20OR%20%22hack%20pittsburgh%22'
 LED_SIGN=/dev/tts/1
 
 cd /jffs
