@@ -9,7 +9,18 @@ cd /jffs
 #     |  sed -e 's/^.*"from_user":"\([^"]*\)".*"text":"\([^"]*\)".*/'`echo -e "\x1c"`'2\1: '`echo -e "\x1c"`'1\2\n/' > $LED_SIGN
 
 wget -q -O - "http://search.twitter.com/search.json?show_user=true&rpp=1&q=$SEARCH" > twitter_raw_res
+rv=$?
+if [ $rv -ne 0 ]; then
+  echo "error: wget returned $rv"
+  exit 1
+fi
+
 cat twitter_raw_res | sed -e 's/^.*"id":\([^,]*\).*/\1/' > twitter_newest_id
+rv=$?
+if [ $rv -ne 0 ]; then
+  echo "error: sed returned $rv"
+  exit 1
+fi
 
 cmp -s twitter_newest_id twitter_last_written_id
 if [ $? -ne 0 ]; then
