@@ -8,7 +8,7 @@ cd /jffs
 #wget -q -O - "http://search.twitter.com/search.json?show_user=true&rpp=1&q=$SEARCH" \
 #     |  sed -e 's/^.*"from_user":"\([^"]*\)".*"text":"\([^"]*\)".*/'`echo -e "\x1c"`'2\1: '`echo -e "\x1c"`'1\2\n/' > $LED_SIGN
 
-wget -q -O - "http://search.twitter.com/search.json?show_user=true&rpp=1&q=$SEARCH" > twitter_raw_res
+wget -q -O - "http://search.twitter.com/search.json?show_user=false&rpp=1&q=$SEARCH" > twitter_raw_res
 rv=$?
 if [ $rv -ne 0 ]; then
   echo "error: wget returned $rv"
