@@ -8,13 +8,15 @@ cd /jffs
 #wget -q -O - "http://search.twitter.com/search.json?show_user=true&rpp=1&q=$SEARCH" \
 #     |  sed -e 's/^.*"from_user":"\([^"]*\)".*"text":"\([^"]*\)".*/'`echo -e "\x1c"`'2\1: '`echo -e "\x1c"`'1\2\n/' > $LED_SIGN
 
-wget -q -O - "http://search.twitter.com/search.json?show_user=true&rpp=1&q=$SEARCH" \
-     |  sed -e 's/^.*"from_user":"\([^"]*\)".*"text":"\([^"]*\)".*/'`echo -e "\x1c"`'2\1: '`echo -e "\x1c"`'1\2\n/' > latest
-cmp -s latest last_written
+wget -q -O - "http://search.twitter.com/search.json?show_user=true&rpp=1&q=$SEARCH" > twitter_raw_res
+cat twitter_raw_res | sed -e 's/^.*"id":\([^,]*\).*/\1/' > twitter_newest_id
 
+cmp -s twitter_newest_id twitter_last_written_id
 if [ $? -ne 0 ]; then
   echo "new"
-  cp latest last_written
+  cp twitter_newest_id twitter_last_written_id
+  cat twitter_raw_res \
+    | sed -e 's/^.*"from_user":"\([^"]*\)".*"text":"\([^"]*\)".*/'`echo -e "\x1c"`'2\1: '`echo -e "\x1c"`'1\2\n/' > last_written
   echo -e "\x1f" > $LED_SIGN
   cat last_written > $LED_SIGN
 fi
