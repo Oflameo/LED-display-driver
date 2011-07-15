@@ -39,5 +39,5 @@ if [ -n "$TWITTER_USER" ] \
   echo "new"
   echo -n $TWITTER_ID > twitter_last_written_id
   echo -e "\x1f" >> $LED_SIGN # beep!
-  echo -e -n "\x1c2$TWITTER_USER:\x1c1$TWITTER_MSG\n" >> $LED_SIGN
+  echo -e "\x1c2$TWITTER_USER:\x1c1$TWITTER_MSG" >> $LED_SIGN
 fi
