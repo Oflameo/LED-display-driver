@@ -3,32 +3,41 @@
 SEARCH='hackpgh%20OR%20hackpittsburgh%20OR%20%22hack%20pittsburgh%22'
 LED_SIGN=/dev/tts/1
 
+#LED_SIGN=tmp
 cd /jffs
 
-#wget -q -O - "http://search.twitter.com/search.json?show_user=true&rpp=1&q=$SEARCH" \
-#     |  sed -e 's/^.*"from_user":"\([^"]*\)".*"text":"\([^"]*\)".*/'`echo -e "\x1c"`'2\1: '`echo -e "\x1c"`'1\2\n/' > $LED_SIGN
+LAST_ID=`cat twitter_last_written_id`
+if [ -z $LAST_ID ]; then
+  LAST_ID=0
+fi
 
-wget -q -O - "http://search.twitter.com/search.json?show_user=false&rpp=1&q=$SEARCH" > twitter_raw_res
+QUERY="http://search.twitter.com/search.json?result_type=recent&show_user=false&rpp=1&count=1&since_id=$LAST_ID&q=$SEARCH"
+echo -n "$QUERY" > twitter_query
+wget -q -O - $QUERY > twitter_raw_res
 rv=$?
 if [ $rv -ne 0 ]; then
   echo "error: wget returned $rv"
   exit 1
 fi
 
-cat twitter_raw_res | sed -e 's/^.*"id":\([^,]*\).*/\1/' > twitter_newest_id
-rv=$?
-if [ $rv -ne 0 ]; then
-  echo "error: sed returned $rv"
-  exit 1
-fi
+TWITTER_USER=`cat twitter_raw_res \
+    | sed -n -e 's/.*"from_user":"\([^"]*\)".*/\1/p'`
+echo -n "$TWITTER_USER" > twitter_user
 
-cmp -s twitter_newest_id twitter_last_written_id
-if [ $? -ne 0 ]; then
+TWITTER_MSG=`cat twitter_raw_res \
+    | sed -n -e 's/.*"text":"\([^"]*\)".*/\1/p'`
+echo -n "$TWITTER_MSG" > twitter_msg
+
+TWITTER_ID=`cat twitter_raw_res \
+    | sed -n -e 's/.*"id":\([^,]*\).*/\1/p'`
+echo -n "$TWITTER_ID" > twitter_id
+
+if [ -n "$TWITTER_USER" ] \
+   && [ -n "$TWITTER_MSG" ] \
+   && [ -n "$TWITTER_ID" ] \
+   && [ "$TWITTER_ID" -gt "$LAST_ID" ]; then
   echo "new"
-  cp twitter_newest_id twitter_last_written_id
-  cat twitter_raw_res \
-    | sed -e 's/^.*"from_user":"\([^"]*\)".*"text":"\([^"]*\)".*/'`echo -e "\x1c"`'2\1: '`echo -e "\x1c"`'1\2\n/' > last_written
-  echo -e "\x1f" > $LED_SIGN
-  cat last_written > $LED_SIGN
+  echo -n $TWITTER_ID > twitter_last_written_id
+  echo -e -n "\x1f" >> $LED_SIGN # beep!
+  echo -e -n "\x1c2$TWITTER_USER:\x1c1$TWITTER_MSG\n" >> $LED_SIGN
 fi
-
