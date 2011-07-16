@@ -26,6 +26,8 @@ echo -n "$TWITTER_USER" > twitter_user
 
 TWITTER_MSG=`cat twitter_raw_res \
     | sed -n -e 's/.*"text":"\([^"]*\)".*/\1/p'`
+# work-around: sometimes twitter prepends user name
+TWITTER_MSG=`echo -n $TWITTER_MSG | sed -e "s/^$TWITTER_USER: \(.*\)/\1/"`
 echo -n "$TWITTER_MSG" > twitter_msg
 
 TWITTER_ID=`cat twitter_raw_res \
