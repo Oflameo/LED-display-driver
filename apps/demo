@@ -1,3 +1,5 @@
+#!/bin/ash
+
 LED_SIGN=/dev/tts/1
 
 # Text formatting
@@ -25,7 +27,7 @@ sleep 9
 echo -e "\x1d3" \
         "\x1c0caution police line do not cross" \
         > $LED_SIGN
-
+        
 sleep 15
 
 echo -e "\x1d0" \

@@ -1,9 +1,7 @@
 #!/bin/ash
 
-SEARCH='hackpgh%20OR%20hackpittsburgh%20OR%20%22hack%20pittsburgh%22'
 LED_SIGN=/dev/tts/1
-
-#LED_SIGN=tmp
+#LED_SIGN=tts
 cd /jffs
 
 LAST_ID=`cat twitter_last_written_id`
@@ -11,35 +9,39 @@ if [ -z "$LAST_ID" ]; then
   LAST_ID=0
 fi
 
-QUERY="http://search.twitter.com/search.json?result_type=recent&show_user=false&rpp=1&count=1&since_id=$LAST_ID&q=$SEARCH"
-echo -n "$QUERY" > twitter_query
-wget -q -O - $QUERY > twitter_raw_res
-rv=$?
-if [ $rv -ne 0 ]; then
-  echo "error: wget returned $rv"
-  exit 1
-fi
+sh getRaw.sh $LAST_ID
+#wget -q -O - $QUERY --header $HEADER > twitter_raw_res
+#rv=$?
+#if [ $rv -ne 0 ]; then
+#  echo "error: wget returned $rv"
+#  exit 1
+#fi
+
+# we are going to prep the JSON result by fixing \/ and tagging the first instances of 
+# ID and TEXT
+cat twitter_raw_res | sed 's/\\\//\//g' | sed 's/"text"/"TEXT"/' | sed 's/"screen_name"/"SCREEN_NAME"/' | sed 's/"id"/"ID"/' > twitter_res
+mv twitter_res twitter_raw_res
 
 TWITTER_USER=`cat twitter_raw_res \
-    | sed -n -e 's/.*"from_user":"\([^"]*\)".*/\1/p'`
-echo -n "$TWITTER_USER" > twitter_user
+    | sed -n -e 's/.*"SCREEN_NAME":"\([^"]*\)".*/\1/p'`
+/bin/echo -n "$TWITTER_USER" > twitter_user
 
 TWITTER_MSG=`cat twitter_raw_res \
-    | sed -n -e 's/.*"text":"\([^"]*\)".*/\1/p'`
+    | sed -n -e 's/.*"TEXT":"\([^"]*\)".*/\1/p'`
 # work-around: sometimes twitter prepends user name
-TWITTER_MSG=`echo -n $TWITTER_MSG | sed -e "s/^$TWITTER_USER: \(.*\)/\1/"`
-echo -n "$TWITTER_MSG" > twitter_msg
+TWITTER_MSG=`/bin/echo -n $TWITTER_MSG | sed -e "s/^$TWITTER_USER: \(.*\)/\1/"`
+/bin/echo -n "$TWITTER_MSG" > twitter_msg
 
 TWITTER_ID=`cat twitter_raw_res \
-    | sed -n -e 's/.*"id":\([^,]*\).*/\1/p'`
-echo -n "$TWITTER_ID" > twitter_id
+    | sed -n -e 's/.*"ID":\([^,]*\).*/\1/p'`
+/bin/echo -n "$TWITTER_ID" > twitter_id
 
 if [ -n "$TWITTER_USER" ] \
    && [ -n "$TWITTER_MSG" ] \
    && [ -n "$TWITTER_ID" ] \
    && [ "$TWITTER_ID" -gt "$LAST_ID" ]; then
-  echo "new"
-  echo -n $TWITTER_ID > twitter_last_written_id
-  echo -e "\x1f" >> $LED_SIGN # beep!
-  echo -e "\x1c2$TWITTER_USER: \x1c1$TWITTER_MSG" >> $LED_SIGN
+  /bin/echo "new"
+  /bin/echo -n $TWITTER_ID > twitter_last_written_id
+  /bin/echo -e "\x1f" >> $LED_SIGN # beep!
+  /bin/echo -e "\x1c2$TWITTER_USER: \x1c1$TWITTER_MSG" >> $LED_SIGN
 fi
